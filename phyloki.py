@@ -197,8 +197,9 @@ def get_hosts(email, input_filename, output_filename):
     host_info = fetch_host_info(accession_numbers, email)
 
     with open(output_filename, "w") as file:
+        file.write("Accession number\thost\n")
         for accession, host in host_info.items():
-            file.write(f"{accession} {host}\n")
+            file.write(f"{accession}\t{host}\n")
     print(f"The request has been fulfilled.\nFile saved to {output_filename}")
 
 
@@ -371,3 +372,213 @@ def get_itol_dataset(organism_file, order_file, output_file, color_map=None):
             file.write(line + "\n")
 
     print("The request has been fulfilled.")
+
+
+def fetch_geo_loc(accession_numbers, email):
+    """
+    Fetch geographical location (geo_loc_name) for each accession number from NCBI.
+
+    Args:
+        accession_numbers (list): List of accession numbers to query.
+        email (str): Email address for NCBI Entrez.
+
+    Returns:
+        dict: A dictionary mapping accession numbers to their geographical location.
+    """
+    Entrez.email = email
+    geo_loc_info = {}
+
+    for accession in accession_numbers:
+        try:
+            handle = Entrez.efetch(db="nucleotide", id=accession, retmode="xml")
+            records = Entrez.read(handle)
+            version = records[0]["GBSeq_accession-version"]  # Retrieve versioned accession number
+            geo_loc = "ND"  # Default if no geo_loc is found
+            
+            # Extract geo_loc_name from the feature table
+            if "GBSeq_feature-table" in records[0]:
+                features = records[0]["GBSeq_feature-table"]
+                for feature in features:
+                    if feature["GBFeature_key"] == "source":
+                        for qualifier in feature["GBFeature_quals"]:
+                            if qualifier["GBQualifier_name"] == "geo_loc_name":
+                                geo_loc = qualifier["GBQualifier_value"]
+                                break
+            geo_loc_info[version] = geo_loc  # Map versioned accession to geo_loc_name
+            handle.close()
+        except Exception as e:
+            print(f"Error fetching geo_loc_name for {accession}: {e}")
+            geo_loc_info[version] = "ND"  # Assign 'ND' in case of any error
+        finally:
+            handle.close()
+    
+    return geo_loc_info
+
+def get_geo_loc(email, input_filename, output_filename):
+    """
+    Retrieve geographical location (geo_loc_name) for accession numbers and save them to a .tsv file.
+
+    Args:
+        email (str): Email address for NCBI Entrez.
+        input_filename (str): Path to the file containing accession numbers.
+        output_filename (str): Path to save the geo location information as a .tsv file.
+    """
+    # Read accession numbers from file
+    accession_numbers = read_accession_file(input_filename)
+    
+    # Fetch geo locations for the accession numbers
+    geo_loc_info = fetch_geo_loc(accession_numbers, email)
+    
+    # Write the results to a .tsv file
+    with open(output_filename, "w") as file:
+        file.write("Accession number\tgeo_loc_name\n")
+        for accession, geo_loc in geo_loc_info.items():
+            file.write(f"{accession}\t{geo_loc}\n")
+    
+    print(f"The request has been fulfilled.\nFile saved to {output_filename}")
+
+
+def fetch_collection_date(accession_numbers, email):
+    """
+    Fetch collection date (/collection_date) for each accession number from NCBI.
+
+    Args:
+        accession_numbers (list): List of accession numbers to query.
+        email (str): Email address for NCBI Entrez.
+
+    Returns:
+        dict: A dictionary mapping accession numbers to their collection date.
+    """
+    Entrez.email = email
+    collection_date_info = {}
+
+    for accession in accession_numbers:
+        try:
+            handle = Entrez.efetch(db="nucleotide", id=accession, retmode="xml")
+            records = Entrez.read(handle)
+            version = records[0]["GBSeq_accession-version"]  # Retrieve versioned accession number
+            collection_date = "ND"  # Default if no collection_date is found
+            
+            # Extract collection_date from the feature table
+            if "GBSeq_feature-table" in records[0]:
+                features = records[0]["GBSeq_feature-table"]
+                for feature in features:
+                    if feature["GBFeature_key"] == "source":
+                        for qualifier in feature["GBFeature_quals"]:
+                            if qualifier["GBQualifier_name"] == "collection_date":
+                                collection_date = qualifier["GBQualifier_value"]
+                                break
+            collection_date_info[version] = collection_date  # Map versioned accession to collection_date
+            handle.close()
+        except Exception as e:
+            print(f"Error fetching collection_date for {accession}: {e}")
+            collection_date_info[version] = "ND"  # Assign 'ND' in case of any error
+        finally:
+            handle.close()
+    
+    return collection_date_info
+
+def get_year(email, input_filename, output_filename):
+    """
+    Retrieve collection date (/collection_date) for accession numbers and save them to a .tsv file.
+
+    Args:
+        email (str): Email address for NCBI Entrez.
+        input_filename (str): Path to the file containing accession numbers.
+        output_filename (str): Path to save the collection date information as a .tsv file.
+    """
+    # Read accession numbers from file
+    accession_numbers = read_accession_file(input_filename)
+    
+    # Fetch collection dates for the accession numbers
+    collection_date_info = fetch_collection_date(accession_numbers, email)
+    
+    # Write the results to a .tsv file
+    with open(output_filename, "w") as file:
+        file.write("Accession number\tcollection_date\n")
+        for accession, collection_date in collection_date_info.items():
+            file.write(f"{accession}\t{collection_date}\n")
+    
+    print(f"The request has been fulfilled.\nFile saved to {output_filename}")
+
+
+def fetch_metadata_info(accession_numbers, email):
+    """
+    Fetch metadata information (accession, organism, geo_loc_name, collection_date, and host) for each accession number.
+
+    Args:
+        accession_numbers (list): List of accession numbers to query.
+        email (str): Email address for NCBI Entrez.
+
+    Returns:
+        list: A list of dictionaries with metadata for each accession number.
+    """
+    Entrez.email = email
+    metadata_list = []
+
+    for accession in accession_numbers:
+        try:
+            handle = Entrez.efetch(db="nucleotide", id=accession, retmode="xml")
+            records = Entrez.read(handle)
+            version = records[0]["GBSeq_accession-version"]  # Retrieve versioned accession number
+
+            # Extract organism name
+            organism_name = records[0]["GBSeq_organism"]
+
+            # Initialize default values
+            geo_loc = "ND"
+            collection_date = "ND"
+            host = "ND"
+
+            # Extract geo_loc_name, collection_date, and host from the feature table
+            if "GBSeq_feature-table" in records[0]:
+                features = records[0]["GBSeq_feature-table"]
+                for feature in features:
+                    if feature["GBFeature_key"] == "source":
+                        for qualifier in feature["GBFeature_quals"]:
+                            if qualifier["GBQualifier_name"] == "geo_loc_name":
+                                geo_loc = qualifier["GBQualifier_value"]
+                            if qualifier["GBQualifier_name"] == "collection_date":
+                                collection_date = qualifier["GBQualifier_value"]
+                            if qualifier["GBQualifier_name"] == "host":
+                                host = qualifier["GBQualifier_value"]
+
+            # Add all extracted data to the metadata list
+            metadata_list.append({
+                "Name": version,
+                "Full.Name": f"{version} {organism_name}",
+                "Country": geo_loc,
+                "Year": collection_date,
+                "Host": host
+            })
+            handle.close()
+        except Exception as e:
+            print(f"Error fetching metadata for {accession}: {e}")
+        finally:
+            handle.close()
+    
+    return metadata_list
+
+def fetch_metadata(email, input_filename, output_filename):
+    """
+    Retrieve metadata for accession numbers (organism, geo_loc_name, collection_date, and host) and save it to a .tsv file.
+
+    Args:
+        email (str): Email address for NCBI Entrez.
+        input_filename (str): Path to the file containing accession numbers.
+        output_filename (str): Path to save the metadata information as a .tsv file.
+    """
+    # Read accession numbers from file
+    accession_numbers = read_accession_file(input_filename)
+
+    # Fetch metadata information for each accession number
+    metadata_list = fetch_metadata_info(accession_numbers, email)
+    
+    # Write the results to a .tsv file
+    with open(output_filename, "w") as file:
+        file.write("Name\tFull.Name\tCountry\tYear\tHost\n")
+        for metadata in metadata_list:
+            file.write(f"{metadata['Name']}\t{metadata['Full.Name']}\t{metadata['Country']}\t{metadata['Year']}\t{metadata['Host']}\n")
+    
+    print(f"The request has been fulfilled.\nFile saved to {output_filename}")
+
