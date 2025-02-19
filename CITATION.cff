@@ -1,8 +1,8 @@
-cff-version: 0.5.0
+cff-version: 0.5.5
 message: If you use this software, please cite it as below.
 authors:
   - family-names: Popov
     given-names: Ilia
 title: "Phyloki"
-date-released: 2024-04-26
+date-released: 2024-02-19
 url: https://github.com/iliapopov17/phyloki
