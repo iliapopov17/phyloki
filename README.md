@@ -7,9 +7,7 @@
 <img src="https://github.com/iliapopov17/phyloki/blob/main/imgs/phyloki_logo_light.png#gh-light-mode-only" width = 50%/>
 <img src="https://github.com/iliapopov17/phyloki/blob/main/imgs/phyloki_logo_dark.png#gh-dark-mode-only" width = 50%/>
 
-**THIS TOOL WILL BE REWRITTEN COMPLETELY TO WORK LOCALLY**
-
-> Phyloki simplifies phylogenetic tree creation in microbiology and virology by facilitating sequence downloads from NCBI GenBank using accession numbers. It also reinstates organism names in trees constructed with IQ-TREE, retrieves host information about microorganisms, and prepares annotation datasets for further visualization in iTOL.
+> Phyloki simplifies phylogenetic tree annotation in microbiology and virology by fetching metadata from NCBI GenBank using accession numbers. It also reinstates organism names in trees constructed with IQ-TREE, retrieves host information about microorganisms, and prepares annotation datasets for further visualization in iTOL.
 
 ## Table of contents
 
@@ -31,6 +29,8 @@ Phyloki allows easy and simple annotation of phylogenetic trees. See the example
 ## Features
 ### Sequence Downloading
 - Facilitates the retrieval of sequences from NCBI GenBank using specified accession numbers.
+### Metadata Fetching
+- Downloads metadata from NCBI GenBank (Accession Number; Organism Name; Country; Year; Host)
 ### Organism Name Reintegration
 - Enhances IQ-TREE constructed trees by replacing accession numbers with the corresponding organism names for clarity and context.
 ### Host Information Retrieval
@@ -40,19 +40,11 @@ Phyloki allows easy and simple annotation of phylogenetic trees. See the example
 
 ## Installation
 
-> I plan to finish all the features of this tool and publish it to `conda` oneday!
-
-```bash
-git clone git@github.com:iliapopov17/phyloki.git && cd phyloki
-```
-
-```bash
-pip install -r requirements.txt
+```python
+pip install phyloki
 ```
 
 ## Usage Guide
-- Demonstrational python notebook is available in `demo.ipynb` file
-- Demonstrational data is available in `demo_data` folder
 
 Demonstrational data is based on the recent paper about identifying novel hantavirus in bats
 
@@ -64,4 +56,4 @@ Contributions are welcome! If you have any ideas, bug fixes, or enhancements, fe
 ## Contact
 For any inquiries or support, feel free to contact me via [email](mailto:iljapopov17@gmail.com)
 
-Happy tree constructing! 🌳
+Happy tree annotating! 🌳
