@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import re
 import argparse
 from Bio import Entrez
 from read_accession_file import read_accession_file
@@ -51,13 +52,31 @@ def fetch_metadata_info(accession_numbers, email):
                                 collection_date = qualifier["GBQualifier_value"]
                             elif qualifier["GBQualifier_name"] == "host":
                                 host = qualifier["GBQualifier_value"]
+            taxonomy = (
+                records[0]["GBSeq_taxonomy"].split("; ")
+                if "GBSeq_taxonomy" in records[0]
+                else []
+            )
+
+            family = next(
+                (taxon for taxon in taxonomy if taxon.endswith(("idae", "aceae"))), "ND"
+            )
+            order = next((taxon for taxon in taxonomy if taxon.endswith("ales")), "ND")
 
             metadata_list.append(
                 {
                     "AN": version,
                     "AN_OrganismName": f"{version} {organism_name}",
-                    "Country": geo_loc,
-                    "Year": collection_date,
+                    "Order": order,
+                    "Family": family,
+                    "Location": geo_loc,
+                    "Country": geo_loc.split(":")[0],
+                    "Date": collection_date,
+                    "Year": (
+                        match.group()
+                        if (match := re.search(r"\d{4}", collection_date))
+                        else collection_date
+                    ),
                     "Host": host,
                 }
             )
@@ -90,11 +109,35 @@ def fetch_metadata(email, input_filename, output_filename):
     metadata_list = fetch_metadata_info(accession_numbers, email)
 
     with open(output_filename, "w") as file:
-        file.write("AN\tAN_OrganismName\tCountry\tYear\tHost\n")
-        for metadata in metadata_list:
-            file.write(
-                f"{metadata['AN']}\t{metadata['AN_OrganismName']}\t{metadata['Country']}\t{metadata['Year']}\t{metadata['Host']}\n"
+        file.write(
+            "\t".join(
+                [
+                    "AN",
+                    "AN_OrganismName",
+                    "Order",
+                    "Family",
+                    "Location",
+                    "Country",
+                    "Date",
+                    "Year",
+                    "Host",
+                ]
             )
+            + "\n"
+        )
+        for metadata in metadata_list:
+            fields = [
+                metadata["AN"],
+                metadata["AN_OrganismName"],
+                metadata["Order"],
+                metadata["Family"],
+                metadata["Location"],
+                metadata["Country"],
+                metadata["Date"],
+                metadata["Year"],
+                metadata["Host"],
+            ]
+            file.write("\t".join(fields) + "\n")
 
     print(f"Metadata retrieval complete.\nFile saved to {output_filename}")
 
